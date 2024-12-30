@@ -1,5 +1,6 @@
 ﻿using Foodily.Interface;
 using Foodily.ViewModels;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Foodily.Services
 {
@@ -30,6 +31,10 @@ namespace Foodily.Services
         {
             try
             {
+                if (id <= 0)
+                {
+                    throw new ArgumentException("Invalid user ID.");
+                }
                 var data = await _recipeRepository.GetRecipeByIdAsync(id);
                 return data;
             }
@@ -43,30 +48,46 @@ namespace Foodily.Services
         {
             try
             {
-                string imagePath = string.Empty;
-
-                if (!string.IsNullOrEmpty(recipe.Photo))
+                if (string.IsNullOrWhiteSpace(recipe.Title))
                 {
-                    var fileName = recipe.Photo;
+                    throw new ArgumentException("Recipe title is required.");
+                }
 
-                    var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwRoot", "Images");
+                if (string.IsNullOrWhiteSpace(recipe.Ingredients))
+                {
+                    throw new ArgumentException("Recipe ingredients are required.");
+                }
+
+                if (string.IsNullOrWhiteSpace(recipe.Instruction))
+                {
+                    throw new ArgumentException("Recipe instructions are required.");
+                }
+
+                if (string.IsNullOrWhiteSpace(recipe.Cooktime))
+                {
+                    throw new ArgumentException("Invalid cook time.");
+                }
+                var ImageName= string.Empty;
+                if (recipe.Photo != null && recipe.Photo.Length > 0)
+                {
+                    //string imagePath = string.Empty;
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(recipe.Photo.FileName);
+                    var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images");
                     if (!Directory.Exists(directoryPath))
                     {
                         Directory.CreateDirectory(directoryPath);
                     }
-
                     var filePath = Path.Combine(directoryPath, fileName);
-
-                    Console.WriteLine($"Saving file to: {filePath}");
-                    imagePath = "/Images/" + fileName;
-
-                    // Log the image path
-                    Console.WriteLine($"Image path: {imagePath}");
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await recipe.Photo.CopyToAsync(stream);
+                    }
+                    ImageName = "/Images/" + fileName;
                 }
                 Recipe recipe1 = new()
                 {
                     Title = recipe.Title,
-                    Photo = imagePath,
+                    Photo = ImageName,
                     Ingredients = recipe.Ingredients,
                     Instruction = recipe.Instruction,
                     Tags = recipe.Tags,
@@ -101,25 +122,25 @@ namespace Foodily.Services
                 {
                     return false;
                 }
-                string imagePath = recipeDetail.Photo; 
 
-                if (!string.IsNullOrEmpty(recipe.Photo))  
+                if (recipeDetail.Photo != null && recipeDetail.Photo.Length > 0)
                 {
-                    var fileName = recipe.Photo;
-                    var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwRoot", "Images");
-
+                    string imagePath = string.Empty;
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(recipe.Photo.FileName);
+                    var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images");
                     if (!Directory.Exists(directoryPath))
                     {
                         Directory.CreateDirectory(directoryPath);
                     }
-
                     var filePath = Path.Combine(directoryPath, fileName);
-
-                    Console.WriteLine($"Saving file to: {filePath}");
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await recipe.Photo.CopyToAsync(stream);
+                    }
                     imagePath = "/Images/" + fileName;
                 }
                 recipeDetail.Title = recipe.Title;
-                recipeDetail.Photo = imagePath;
+                recipeDetail.Photo = recipe.Photo.FileName;
                 recipeDetail.Ingredients = recipe.Ingredients;
                 recipeDetail.Tags = recipe.Tags;
                 recipeDetail.Description = recipe.Description;
@@ -145,6 +166,10 @@ namespace Foodily.Services
                     return false;
                 }
                 var recipeData = await _recipeRepository.DeleteRecipeAsync(rid);
+                if (recipeData == null)
+                {
+                    return false;
+                }
                 return recipeData;
             }
             catch (Exception ex)
