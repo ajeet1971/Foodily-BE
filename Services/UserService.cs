@@ -23,6 +23,10 @@ namespace Foodily.Services
             try
             {
                 var data = await _userRepository.GetUsersList();
+                if (data == null || data.Count == 0)
+                {
+                    return null;
+                }
                 return data;
             }
             catch (Exception ex)
@@ -35,7 +39,15 @@ namespace Foodily.Services
         {
             try
             {
+                if (id <= 0)
+                {   
+                    throw new ArgumentException("Invalid user ID.");
+                }
                 var data = await _userRepository.GetUserById(id);
+                if (data == null)
+                {
+                    return null; 
+                }
                 return data;
             }
             catch (Exception ex)
@@ -45,9 +57,39 @@ namespace Foodily.Services
             }
         }
 
+        public bool ValidatePassword(string password)
+        {
+            if (password.Length < 8)
+                return false;
+
+            //at least one lowercase letter
+            if (!password.Any(char.IsLower))
+                return false;
+
+            //at least one uppercase letter
+            if (!password.Any(char.IsUpper))
+                return false;
+
+            //at least one digit
+            if (!password.Any(char.IsDigit))
+                return false;
+
+            //at least one special character
+            if (!password.Any(ch => !char.IsLetterOrDigit(ch)))
+                return false;
+
+            return true;
+        }
+
+        private bool IsValidEmail(string email)
+        {
+            var emailRegex = @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
+            return System.Text.RegularExpressions.Regex.IsMatch(email, emailRegex);
+        }
+
         public async Task<int> AddUserDetails(UserVM users)
         {
-            try
+            try 
             {
                 if (users == null)
                 {
@@ -57,6 +99,14 @@ namespace Foodily.Services
                 if (existingUser != null)
                 {
                     return -1; 
+                }
+                if (!ValidatePassword(users.Password))
+                {
+                    return -2;
+                }
+                if (!IsValidEmail(users.Email))
+                {
+                    return -3; 
                 }
                 UserVM userDetails = new()
                 {
@@ -140,7 +190,7 @@ namespace Foodily.Services
                     return result;
                 }
             }
-        }
+        }    
         public async Task<UserVM> GetUser(string email, string password)
         {
             var data = await _userRepository.GetUserByEmail(email);
@@ -150,7 +200,7 @@ namespace Foodily.Services
                 return data;
             }
             return null;
-        }
+        }   
         public string GenerateToken(UserVM user)
         {
 
