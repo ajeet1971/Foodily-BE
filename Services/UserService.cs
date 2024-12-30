@@ -206,6 +206,7 @@ namespace Foodily.Services
 
             var claims = new[]
             {
+                new Claim("useName", user.UserName),
                 new Claim("email", user.Email),
                 new Claim("id", user.Id.ToString())
             };

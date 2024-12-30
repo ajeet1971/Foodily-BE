@@ -23,11 +23,11 @@ namespace Foodily.Controllers
             try
             {
                 var result = await _recipeService.GetAllRecipesAsync();
-                return Ok(result);
+                return Ok(new { Result = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { ex.Message });
             }
         }
 
@@ -36,45 +36,86 @@ namespace Foodily.Controllers
         {
             try
             {
+                if (id <= 0)
+                {
+                    return BadRequest(new { message = "Invalid Recipe ID." });
+                }
                 var result = await _recipeService.GetRecipeByIdAsync(id);
-                return Ok(result);
+                return Ok(new { Result = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { ex.Message });
             }
         }
 
         [HttpPost("CreateRecipe")]
-        public async Task<IActionResult> AddRecipeDetails([FromBody] RecipeVM recipe)
+        public async Task<IActionResult> AddRecipeDetails([FromForm] RecipeVM recipe )
         {
             try
             {
+                if (recipe == null)
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest,new { message = "Recipe data is required." });
+                }
+                if (string.IsNullOrWhiteSpace(recipe.Title))
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest, new { message = "Recipe title is required." });
+                }
+
+                if (string.IsNullOrWhiteSpace(recipe.Ingredients))
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest, new { message = "Recipe ingredients are required." });
+                }
+
+                if (string.IsNullOrWhiteSpace(recipe.Instruction))
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest, new { message = "Recipe instructions are required." });
+                }
+                if (string.IsNullOrWhiteSpace(recipe.Cooktime))
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest, new { message = "Invalid cook time. Please enter a valid time" });
+                }
+                if (recipe.Photo == null)
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest, new { message = "Please enter a photo." });
+                }
                 var res = await _recipeService.AddRecipeAsync(recipe);
                 if (res == 1)
                 {
-                    return StatusCode(StatusCodes.Status201Created, "Recipe Added Successfully");
+                    return StatusCode(StatusCodes.Status201Created, new { message = "Recipe Added Successfully" });
                 }
                 else
                 {
-                    return StatusCode(StatusCodes.Status400BadRequest);
+                    return StatusCode(StatusCodes.Status400BadRequest, new { message = "Failed to add recipe." });
                 }
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error while adding recipe details.: " + ex);
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error while adding recipe details.: " + ex });
             }
         }
 
         [HttpPatch("UpdateRecipe")]
-        public async Task<IActionResult> UpdateRecipe(int rid, [FromBody] RecipeVM recipe)
+        public async Task<IActionResult> UpdateRecipe(int rid, [FromForm] RecipeVM recipe)
         {
             try
             {
+                if (rid <= 0)
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest, new { message = "Invalid recipe ID." });
+                }
+
+                if (recipe == null)
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest, new { message = "Recipe data is required." });
+                }
+
+
                 var result = await _recipeService.UpdateRecipeAsync(rid, recipe);
                 if (result)
                 {
-                    return StatusCode(StatusCodes.Status201Created, "Recipe updated Successfully");
+                    return StatusCode(StatusCodes.Status201Created, new { message = "Recipe updated Successfully" });
                 }
                 else
                 {
@@ -83,7 +124,7 @@ namespace Foodily.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error while update recipe details.: " + ex);
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error while update recipe details.: " + ex });
             }
         }
 
@@ -92,10 +133,15 @@ namespace Foodily.Controllers
         {
             try
             {
+             
                 var result = await _recipeService.DeleteRecipeAsync(rid);
+                if (!result)
+                {
+                    return NotFound(new { message = $"Recipe with ID {rid} not found." });
+                }
                 if (result)
                 {
-                    return StatusCode(StatusCodes.Status201Created, "Recipe deleted Successfully");
+                    return StatusCode(StatusCodes.Status201Created, new { message = "Recipe deleted Successfully" });
                 }
                 else
                 {
@@ -104,14 +150,9 @@ namespace Foodily.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error while delete recipe details.: " + ex);
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error while delete recipe details.: " + ex });
             }
         }
 
-        //[HttpGet]
-        //public IActionResult Get()
-        //{
-        //    return Ok("Test");
-        //}
     }
 }
