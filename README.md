@@ -8,7 +8,6 @@ This backend project, built using .NET, powers the core features of the Foodily 
 
 - **User Authentication**: Users can create accounts, log in, and manage their profiles securely.
 - **Recipe Management**: Users can create, update, and delete their recipes, as well as view and explore recipes shared by others.
-- **Recipe Discovery**: Users can browse through a variety of recipes, filter by categories (e.g., vegan, gluten-free), and search by ingredients or recipe names.
 
 With a focus on simplicity, performance, and security, Foodily aims to be your go-to platform for culinary inspiration and recipe sharing. The backend leverages technologies such as ASP.NET Core, Entity Framework Core, and JWT for authentication, ensuring a smooth and scalable experience for users.
 
