@@ -107,10 +107,6 @@ namespace Foodily.Repositories
                     throw new ArgumentException("Email must be provided.");
                 }
                 var data = await _dataContext.UserMaster.FirstOrDefaultAsync(_ => _.Email == email);
-                if (data == null)
-                {
-                    throw new KeyNotFoundException($"User with email {email} not found.");
-                }
                 return data;
             }
             catch (Exception ex)
