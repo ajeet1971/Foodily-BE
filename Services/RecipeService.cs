@@ -177,5 +177,31 @@ namespace Foodily.Services
                 throw ex;
             }
         }
+
+        public async Task<PaginatedList<Recipe>> GetPaginatedRecipesAsync(int pageNumber, int pageSize)
+        {
+            try
+            {
+                var data = await _recipeRepository.GetPaginatedRecipesAsync(pageNumber, pageSize);
+                return data;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public async Task<List<Recipe>> GetFilteredAndSortedRecipesAsync(string? title, string? tags, string? sortBy, bool isDescending)
+        {
+            try
+            {
+                return await _recipeRepository.GetFilteredAndSortedRecipesAsync(title, tags, sortBy, isDescending);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
     }
 }

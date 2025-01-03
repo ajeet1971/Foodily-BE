@@ -20,11 +20,11 @@ namespace Foodily.Controllers
             try
             {
                 var result = await _categoryService.GetAllCategoryAsync();
-                return Ok(result);
+                return Ok(new { message = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
         }
         [HttpGet("GetCategoryById")]
@@ -32,12 +32,16 @@ namespace Foodily.Controllers
         {
             try
             {
+                if(id <= 0)
+                {
+                    return BadRequest(new { message = "Invalid Category ID." });
+                }
                 var result = await _categoryService.GetCategoryByIdAsync(id);
-                return Ok(result);
+                return Ok(new { message = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
         }
 
@@ -49,7 +53,7 @@ namespace Foodily.Controllers
                 var res = await _categoryService.AddCategoryAsync(category);
                 if (res == 1)
                 {
-                    return StatusCode(StatusCodes.Status201Created, "category Added Successfully");
+                    return StatusCode(StatusCodes.Status201Created, new { message = "category Added Successfully" });
                 }
                 else
                 {
@@ -58,7 +62,7 @@ namespace Foodily.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error while adding category data.: " + ex);
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error while adding category data.: " + ex });
             }
         }
 

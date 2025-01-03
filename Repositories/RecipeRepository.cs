@@ -47,5 +47,42 @@ namespace Foodily.Repositories
             }
             return false;
         }
+
+        public async Task<PaginatedList<Recipe>> GetPaginatedRecipesAsync(int pageNumber, int pageSize)
+        {
+            var data = _dataContext.RecipeMaster.AsQueryable();
+            var count = await data.CountAsync();
+            var items = await data.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            return new PaginatedList<Recipe>(items, count, pageNumber, pageSize);
+        }
+
+        public async Task<List<Recipe>> GetFilteredAndSortedRecipesAsync(string? title, string? tags, string? sortBy, bool isDescending)
+        {
+            var query = _dataContext.RecipeMaster.AsQueryable();
+
+            // Filtering
+            if (!string.IsNullOrEmpty(title))
+            {
+                query = query.Where(r => r.Title.Contains(title));
+            }
+
+            if (!string.IsNullOrEmpty(tags))
+            {
+                query = query.Where(r => r.Tags != null && r.Tags.Contains(tags));
+            }
+
+            // Sorting
+            query = sortBy?.ToLower() switch
+            {
+                "title" => isDescending ? query.OrderByDescending(r => r.Title) : query.OrderBy(r => r.Title),
+                "tags" => isDescending ? query.OrderByDescending(r => r.Tags) : query.OrderBy(r => r.Tags),
+                _ => query 
+            };
+
+            return await query.ToListAsync();
+        }
+
+
     }
 }
