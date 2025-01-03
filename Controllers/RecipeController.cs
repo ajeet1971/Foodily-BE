@@ -18,12 +18,29 @@ namespace Foodily.Controllers
         }
 
         [HttpGet("GetAllRecipes")]
-        public async Task<IActionResult> GetAllRecipes()
+        public async Task<IActionResult> GetAllRecipes(string? title = null,string? tags = null,string? sortBy = null,bool isDescending = false,int pageNumber = 1,int pageSize = 10)
         {
             try
             {
-                var result = await _recipeService.GetAllRecipesAsync();
-                return Ok(new { Result = result });
+                // filtering and sorting
+                var filteredAndSortedRecipes = await _recipeService.GetFilteredAndSortedRecipesAsync(title, tags, sortBy, isDescending);
+
+                //pagination
+                var totalItems = filteredAndSortedRecipes.Count;
+                var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+                var paginatedRecipes = filteredAndSortedRecipes
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                return Ok(new
+                {
+                    Data = paginatedRecipes,
+                    PageIndex = pageNumber,
+                    TotalPages = totalPages,
+                    HasPreviousPage = pageNumber > 1,
+                    HasNextPage = pageNumber < totalPages
+                });
             }
             catch (Exception ex)
             {
